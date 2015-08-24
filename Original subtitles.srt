@@ -1,0 +1,3295 @@
+1
+00:00:00,000 --> 00:00:22,820
+>> 
+
+2
+00:00:22,820 --> 00:00:27,460
+GLECKLER: Hi everyone. I'm Arthur Gleckler
+and I'm happy to introduce Dr. Ron Garret
+
+3
+00:00:27,460 --> 00:00:32,340
+here, who's going to be speaking about quantum
+mechanics today. He's a former Googler from
+
+4
+00:00:32,340 --> 00:00:37,980
+the very early days of the company, around
+2000. He was the lead engineer on the first
+
+5
+00:00:37,980 --> 00:00:43,980
+release of AdWords and the original author
+of the Google translation console. He also
+
+6
+00:00:43,980 --> 00:00:48,390
+wrote the first billing system that Google
+used. Also, for many years, he worked at the
+
+7
+00:00:48,390 --> 00:00:53,760
+NASA Jet Propulsion Lab in Pasadena, specializing
+in AI and robotics. I'm hoping to convince
+
+8
+00:00:53,760 --> 00:00:59,550
+him to come back and talk about his experiences,
+debugging spacecraft 250 million miles from
+
+9
+00:00:59,550 --> 00:01:09,880
+the earth. Here's Ron.
+>> GARRET: Thanks. So I'm told that my abstract
+
+10
+00:01:09,880 --> 00:01:14,440
+caused a little bit of a kerfuffle so let
+me start out with a couple of disclaimers
+
+11
+00:01:14,440 --> 00:01:20,690
+upfront to kind of manage expectations. The
+title of the talk was intended to be tongue-in-cheek.
+
+12
+00:01:20,690 --> 00:01:25,850
+There is no actual conspiracy, at least, as
+far as I know but there is a fairly big disconnect
+
+13
+00:01:25,850 --> 00:01:30,040
+between what you read about quantum mechanics
+in the popular press and what the actual underlying
+
+14
+00:01:30,040 --> 00:01:35,310
+truth is, and that's what this talk is about.
+I am not a physicist. Do we have any actual
+
+15
+00:01:35,310 --> 00:01:44,259
+physicists in the crowd? Oh, boy, okay. You
+can make sure you keep me honest. I'm a software
+
+16
+00:01:44,259 --> 00:01:50,710
+engineer. I came upon this about actually
+20 years ago when I read an article in Scientific
+
+17
+00:01:50,710 --> 00:01:55,740
+American and I thought, "This can't possibly
+be right." And it took me 10 years to finally
+
+18
+00:01:55,740 --> 00:02:01,159
+find a physicist at Caltech who could explain
+to me why in fact it wasn't right and at that
+
+19
+00:02:01,159 --> 00:02:04,130
+point, everything just kind of clicked and
+quantum mechanics made a lot more sense to
+
+20
+00:02:04,130 --> 00:02:08,369
+me than it did before. And that's what this
+talk is about. It's about--it's about a different
+
+21
+00:02:08,369 --> 00:02:17,340
+way to think about QM that hasn't gotten very
+much attention and dispels this idea that
+
+22
+00:02:17,340 --> 00:02:23,130
+quantum mechanics is sort of intractably weird.
+Somebody has said to me once that quantum
+
+23
+00:02:23,130 --> 00:02:28,299
+mechanics obeys the law of conservation of
+weirdness. And to a certain extent, that is
+
+24
+00:02:28,299 --> 00:02:33,820
+true. There is a certain amount of--quantum
+mechanics extracts a toll on your intuition
+
+25
+00:02:33,820 --> 00:02:38,449
+and some of that will never go away. But I
+don't think that quantum mechanics needs to
+
+26
+00:02:38,449 --> 00:02:44,459
+be fundamentally any more incomprehensible
+than, say, relativity which most technical
+
+27
+00:02:44,459 --> 00:02:50,449
+people seem to have no trouble wrapping their
+brains around nowadays. So with that sort
+
+28
+00:02:50,449 --> 00:02:54,419
+of expectation management out of the way,
+I want to start out by inviting you to think
+
+29
+00:02:54,419 --> 00:03:00,519
+about the question, "What does it mean to
+'measure' something?" So, imagine that we're
+
+30
+00:03:00,519 --> 00:03:08,070
+sitting here doing some experiment. We have
+some system--let me grab a pointer--that we
+
+31
+00:03:08,070 --> 00:03:12,540
+want to measure some property of it so we
+have some, you know, sensor here like a camera,
+
+32
+00:03:12,540 --> 00:03:16,519
+and it gathers some data and we feed it to
+a computer, and that data shall pop up from
+
+33
+00:03:16,519 --> 00:03:21,190
+the screen, and we look at that with our eyes,
+and we form some mental image in our head,
+
+34
+00:03:21,190 --> 00:03:25,859
+and how do we know that this mental image
+that we form in our head actually corresponds
+
+35
+00:03:25,859 --> 00:03:32,350
+to underlying physical reality? Well, one
+indication that we have of this is that we
+
+36
+00:03:32,350 --> 00:03:37,380
+can do experiments more than once and observe
+that we get consistent results. So, for example,
+
+37
+00:03:37,380 --> 00:03:39,470
+what color is this?
+>> Green.
+
+38
+00:03:39,470 --> 00:03:48,669
+>> GARRET: Green, yes. So we can observe through
+our common everyday experience that the results
+
+39
+00:03:48,669 --> 00:03:54,910
+of measurements are consistent across space
+and time. And, I mean, this is really a very
+
+40
+00:03:54,910 --> 00:04:01,260
+reliable aspect of our universe, but it's
+actually a very deep mystery why this is so.
+
+41
+00:04:01,260 --> 00:04:05,650
+And Einstein famously said that, "The most
+incomprehensible thing about the universe
+
+42
+00:04:05,650 --> 00:04:10,530
+is that it is comprehensible." We can actually
+do experiments and get results that are consistent
+
+43
+00:04:10,530 --> 00:04:16,340
+across space and time and we don't really
+know why that, any inherent reason, why that
+
+44
+00:04:16,340 --> 00:04:22,930
+should be the case. Now, there is one very
+plausible sounding explanation of why this
+
+45
+00:04:22,930 --> 00:04:26,910
+is the case, and that is that the results
+of these measurements are actually an accurate
+
+46
+00:04:26,910 --> 00:04:31,810
+reflection of some underlying metaphysical
+reality. That reality, that there really is
+
+47
+00:04:31,810 --> 00:04:37,220
+a universe out there and when we measure it,
+we're getting back actual information about
+
+48
+00:04:37,220 --> 00:04:41,900
+that underlying physical reality. And that
+is the reason why these measurements are consistent
+
+49
+00:04:41,900 --> 00:04:48,580
+because reality sees to it that that's the
+case. Well, it turns out that we can demonstrate
+
+50
+00:04:48,580 --> 00:04:55,730
+that that's not true. I'm about to lead you
+down a rabbit hole but my purpose in leading
+
+51
+00:04:55,730 --> 00:04:59,130
+you down this rabbit hole is to do it in such
+a way that you can find your way back out
+
+52
+00:04:59,130 --> 00:05:03,220
+again. So I'm going to do it very carefully,
+step by step, and tell you in advance where
+
+53
+00:05:03,220 --> 00:05:08,160
+we're going. I'm going to start out by reviewing
+the usual QM story. What you will read if
+
+54
+00:05:08,160 --> 00:05:14,320
+you go to a popular account of quantum mechanics
+that you read, you know, pick up at Amazon
+
+55
+00:05:14,320 --> 00:05:23,180
+or a bookstore or read about it in Wired or
+whatever. I'll then show you how that story
+
+56
+00:05:23,180 --> 00:05:27,340
+can't possibly be true, because if that story
+were true, it would lead to a violation of
+
+57
+00:05:27,340 --> 00:05:31,530
+relativity, in particular, it would lead to
+faster-than-light communication. And it doesn't
+
+58
+00:05:31,530 --> 00:05:35,910
+do this in the usual way that most people
+think that it leads to faster-than-light communication,
+
+59
+00:05:35,910 --> 00:05:39,850
+it does it in a more subtle way that really
+hasn't gotten a lot of attention. So you physicists
+
+60
+00:05:39,850 --> 00:05:47,430
+in the room, bear with me. Then, I'm going
+to walk you through some of the actual underlying
+
+61
+00:05:47,430 --> 00:05:53,010
+mathematics of quantum mechanics, in a way
+that is accessible to anyone who knows--can
+
+62
+00:05:53,010 --> 00:06:02,420
+do basic algebra and knows what algorithm
+is. And finally, tell a new story based on
+
+63
+00:06:02,420 --> 00:06:06,440
+our understanding of what the underlying mathematics
+actually says about what's really going on
+
+64
+00:06:06,440 --> 00:06:13,870
+and hopefully we'll achieve enlightenment
+at the end of that. So, is there anybody here
+
+65
+00:06:13,870 --> 00:06:18,889
+who has not heard of the two-slit experiment?
+All right, good. I will just blast through
+
+66
+00:06:18,889 --> 00:06:25,740
+this very quickly. So, we have a--this is--you
+have a laser that shines through two-slits,
+
+67
+00:06:25,740 --> 00:06:32,180
+and you get an interference pattern that shows
+that light is a wave and can interfere with
+
+68
+00:06:32,180 --> 00:06:40,030
+itself like any other wave. And there are
+two strange things about this. If you look
+
+69
+00:06:40,030 --> 00:06:46,360
+at the results of this experiment with very
+low intensity light, what you find is, and
+
+70
+00:06:46,360 --> 00:06:53,250
+this isn't showing up very well, but this
+top image here shows just some dots scattered
+
+71
+00:06:53,250 --> 00:06:57,550
+randomly. And then dots get denser and denser
+and denser until down here at the bottom you
+
+72
+00:06:57,550 --> 00:07:01,220
+have a dense enough pattern of dots that you
+can start to see this interference pattern
+
+73
+00:07:01,220 --> 00:07:08,780
+start to emerge. And this is an actual photograph
+of laser light going through a single slit
+
+74
+00:07:08,780 --> 00:07:13,600
+and going through two slits. And you can see
+this interference pattern here, this is actual,
+
+75
+00:07:13,600 --> 00:07:17,540
+an actual photograph of the same experiment,
+this particular one happened to be done with
+
+76
+00:07:17,540 --> 00:07:24,740
+electrons but the underlying physics is the
+same. And the--the thing to notice here is
+
+77
+00:07:24,740 --> 00:07:29,450
+that the total amount of light that you get
+in this pattern when there are two slits is
+
+78
+00:07:29,450 --> 00:07:34,280
+brighter than the overall amount of light
+that you get with one slit which is what you
+
+79
+00:07:34,280 --> 00:07:40,389
+would expect but that there are some places
+here where you have these dark bands that
+
+80
+00:07:40,389 --> 00:07:44,810
+were bright up here when you only had one
+slit. And this is the interesting part that
+
+81
+00:07:44,810 --> 00:07:49,460
+you want to kind of focus your attention on
+because what this means is that there's a
+
+82
+00:07:49,460 --> 00:07:54,450
+spot here where light was shining and then
+you open up an extra path for light to get
+
+83
+00:07:54,450 --> 00:08:01,700
+to the screen and that spot goes dark. And
+that is the manifestation of interference.
+
+84
+00:08:01,700 --> 00:08:06,620
+But the strange thing about it is that this
+is not a continuous phenomenon, it's an accumulation
+
+85
+00:08:06,620 --> 00:08:13,600
+of all these particles. Now, I can actually--I
+used to think that this was a fairly subtle
+
+86
+00:08:13,600 --> 00:08:18,570
+experiment that you need a specialized equipment
+to conduct this experiment. It turns out it's
+
+87
+00:08:18,570 --> 00:08:23,340
+not true, you can actually do this experiment
+yourself. These are some pencil leads that
+
+88
+00:08:23,340 --> 00:08:29,760
+I've taped together with scotch tape and this
+is an ordinary laser pointer. And if I pass
+
+89
+00:08:29,760 --> 00:08:32,839
+these, and there's just some very narrow gaps
+between these leads, so you can actually see
+
+90
+00:08:32,839 --> 00:08:38,060
+this happen if I pass the leads in front of
+this pointer, you can see the light start
+
+91
+00:08:38,060 --> 00:08:44,970
+to spread out. And if you're close enough,
+you can actually see the interference bands.
+
+92
+00:08:44,970 --> 00:08:48,790
+I don't think you can see it in the back.
+But if you're interested, after the talk,
+
+93
+00:08:48,790 --> 00:08:51,420
+come up, I'll give you a closer look at it.
+You can actually see the interference pattern.
+
+94
+00:08:51,420 --> 00:08:56,990
+The point here is that this is not a subtle
+phenomenon and it's not something that you
+
+95
+00:08:56,990 --> 00:09:03,430
+need expensive equipment to reproduce. This
+is an everyday experience for modern humans,
+
+96
+00:09:03,430 --> 00:09:11,990
+at least. Okay, so this is not yet intractably
+weird, because there are all kinds of explanations
+
+97
+00:09:11,990 --> 00:09:16,330
+that we can postulate about how this might
+be happening. So, for example, photons and
+
+98
+00:09:16,330 --> 00:09:20,650
+electrons might be real particles that have
+real locations and velocities like our intuitions
+
+99
+00:09:20,650 --> 00:09:26,440
+about particles that might be pushed around
+by some kind of underlying wave. And--oh,
+
+100
+00:09:26,440 --> 00:09:33,960
+I forgot to mention--whoops--the location
+where these particles accumulate is random,
+
+101
+00:09:33,960 --> 00:09:40,380
+there's no known way to predict other than
+statistically where these particles are going
+
+102
+00:09:40,380 --> 00:09:47,250
+to end up on the screen. So, the randomness
+might just be due to some underlying real
+
+103
+00:09:47,250 --> 00:09:52,130
+physical property that we just don't know
+how to measure. But it turns out we can eliminate
+
+104
+00:09:52,130 --> 00:09:57,370
+this possibility as well. And the way we do
+that is by asking--by trying to track the
+
+105
+00:09:57,370 --> 00:10:03,070
+path of a particle and ask with--on its way
+to the screen, on its way to producing this
+
+106
+00:10:03,070 --> 00:10:07,210
+interference pattern, which of these two slits
+did it go through? And we could do that. We
+
+107
+00:10:07,210 --> 00:10:12,850
+can add detectors to the slits and we can
+measure which of the two slits a particle
+
+108
+00:10:12,850 --> 00:10:16,750
+went through. But it turns out that when we
+do that the interference pattern goes away
+
+109
+00:10:16,750 --> 00:10:24,210
+and the phenomenon that we were trying to
+get a better grip on has changed. And it turns
+
+110
+00:10:24,210 --> 00:10:29,600
+out that this is an inherent feature of quantum
+mechanics, that any modification that we make
+
+111
+00:10:29,600 --> 00:10:35,870
+to this experiment that allows us to determine,
+even in principle, which of these slits this
+
+112
+00:10:35,870 --> 00:10:45,270
+particle went through destroys the interference.
+This is the famous wave particle duality,
+
+113
+00:10:45,270 --> 00:10:47,839
+any modification that allows us to determine
+even in principle--yeah?
+
+114
+00:10:47,839 --> 00:10:54,390
+>> You ask people in the VC to mute their
+mics so...
+
+115
+00:10:54,390 --> 00:10:59,430
+>> GARRET: So, I've been asked to ask the
+people on the VC to mute their mics, did I
+
+116
+00:10:59,430 --> 00:11:08,080
+get that right? Okay. Okay, anyway, so the
+conclusion from this observation is that something
+
+117
+00:11:08,080 --> 00:11:13,110
+has to be--something has to be at both slits
+in order to produce interference. And the
+
+118
+00:11:13,110 --> 00:11:18,820
+reason we know that is because we don't actually
+need both of these detectors, one of them
+
+119
+00:11:18,820 --> 00:11:24,890
+is enough, because if we have one detector
+and it fails to register that we know the
+
+120
+00:11:24,890 --> 00:11:29,080
+particle went through the other slit. Now,
+that particle going through the other slit,
+
+121
+00:11:29,080 --> 00:11:34,250
+it never interacted with anything, the particle
+never interacted with anything, but because
+
+122
+00:11:34,250 --> 00:11:38,310
+it allows us to know where the particle was
+even though we didn't actually measure it,
+
+123
+00:11:38,310 --> 00:11:43,470
+that's enough to destroy the interference
+and so this particle that's over here must
+
+124
+00:11:43,470 --> 00:11:46,910
+somehow have known that we were looking over
+here even though the particle itself wasn't
+
+125
+00:11:46,910 --> 00:11:52,960
+there. So, something must have been there
+to be able to tell that we had a detector
+
+126
+00:11:52,960 --> 00:11:59,680
+here, but we don't know what that is. Now,
+it turns out, this is again, this is a universal
+
+127
+00:11:59,680 --> 00:12:04,620
+property of quantum mechanics. It holds for
+any kind of particle--in practice, that means
+
+128
+00:12:04,620 --> 00:12:09,339
+photons and electrons because that's all there
+is in this universe unless you start getting
+
+129
+00:12:09,339 --> 00:12:14,149
+into nuclear physics. And any kind of measurement,
+and any kind two-slit experiment, any experiment
+
+130
+00:12:14,149 --> 00:12:18,360
+where you provide two different paths for
+the particle to potentially go down and bring
+
+131
+00:12:18,360 --> 00:12:23,520
+it back together without knowing which way
+it actually went will produce interference
+
+132
+00:12:23,520 --> 00:12:26,720
+and any modification that you make that lets
+you figure you out where it went will destroy
+
+133
+00:12:26,720 --> 00:12:32,740
+that interference. Now, this is still not
+intractably weird because we can still tell
+
+134
+00:12:32,740 --> 00:12:37,209
+a reasonable story about why this might happen.
+So, maybe measurement does something to this
+
+135
+00:12:37,209 --> 00:12:41,120
+system. These are after all very small particles
+and very delicate systems and so maybe it's
+
+136
+00:12:41,120 --> 00:12:45,839
+just physically impossible to make a measurement
+without disturbing the system in a way that
+
+137
+00:12:45,839 --> 00:12:51,399
+is the cause of the destruction of this interference.
+Maybe the wave function collapses and becomes
+
+138
+00:12:51,399 --> 00:12:58,730
+a particle somehow, this is the famous Copenhagen
+interpretation of quantum mechanics. But it
+
+139
+00:12:58,730 --> 00:13:04,490
+turns out that we can rule out that possibility
+as well. And the way we rule out that possibility
+
+140
+00:13:04,490 --> 00:13:11,980
+is by asking, "How and when does this collapse,
+this purported collapse, happen?" Collapse
+
+141
+00:13:11,980 --> 00:13:17,209
+has a number of features that ought to make
+us very suspicious of it just at priority
+
+142
+00:13:17,209 --> 00:13:23,250
+without even doing any experiments. It's a
+discontinuous and nonreversible phenomenon
+
+143
+00:13:23,250 --> 00:13:27,000
+that once you know that a particle has gone
+through one slit or the other, you can't go
+
+144
+00:13:27,000 --> 00:13:33,790
+roll back time and undo that. And if you look
+at the mathematics of quantum mechanics, which
+
+145
+00:13:33,790 --> 00:13:39,880
+we'll get to later, there's nothing in the
+math that's discontinuous. And more than that,
+
+146
+00:13:39,880 --> 00:13:46,980
+all the math is actually time reversible so
+we can make a--hypothesize that this collapse
+
+147
+00:13:46,980 --> 00:13:52,330
+happens, but this is fundamentally at odds
+with the mathematics of what quantum mechanics--of
+
+148
+00:13:52,330 --> 00:13:56,820
+how quantum mechanic says that our universe
+works. So we can actually do better than that.
+
+149
+00:13:56,820 --> 00:14:04,430
+We can actually do an experiment to show that
+collapse, if it happens, is a much subtler
+
+150
+00:14:04,430 --> 00:14:11,480
+phenomenon than it would've first appear and
+this is the famous--this is the quantum mystery
+
+151
+00:14:11,480 --> 00:14:15,640
+number two, the famous quantum eraser. Now,
+I--this is a two-slit experiment that I have
+
+152
+00:14:15,640 --> 00:14:21,390
+now reduced to something more abstract. So
+we have some particle source, this can be
+
+153
+00:14:21,390 --> 00:14:27,570
+photons or electrons. We have some abstract
+way of splitting up particles so that it has
+
+154
+00:14:27,570 --> 00:14:35,220
+two different paths to go down and some abstract
+way of recombining that particle so that both
+
+155
+00:14:35,220 --> 00:14:38,850
+of those paths end up in the same place so
+that we get interference. And here notionally,
+
+156
+00:14:38,850 --> 00:14:45,690
+we have one detector at one of these dark
+fringes and another one at a bright fringe
+
+157
+00:14:45,690 --> 00:14:51,410
+so that if we introduce some kind of an abstract
+measurement on one of these branches then
+
+158
+00:14:51,410 --> 00:14:58,519
+the interference pattern fusses out, that
+we now have the path, the amount of light,
+
+159
+00:14:58,519 --> 00:15:02,820
+in each detector. So now we don't have fringes
+anymore, we have the spread-out pattern that
+
+160
+00:15:02,820 --> 00:15:09,670
+we saw and the single slit version of the
+experiment. Like I said, there are lots of
+
+161
+00:15:09,670 --> 00:15:14,170
+different ways that you can do this--actually,
+let me go on to the next one. So it turns
+
+162
+00:15:14,170 --> 00:15:20,140
+out that you can erase this, that there are
+physical ways that if this measurement, certain
+
+163
+00:15:20,140 --> 00:15:25,450
+kinds of proto measurements, that you can
+do here, you can then go back and erase after
+
+164
+00:15:25,450 --> 00:15:32,279
+the fact and restore the interference. And
+here's a concrete example of that. If we depolarize
+
+165
+00:15:32,279 --> 00:15:36,149
+light and--I'm actually going to show you
+this in just a second, so bear with me if
+
+166
+00:15:36,149 --> 00:15:40,510
+you don't understand what I'm about to say,
+you use polarized light and you do the measurement
+
+167
+00:15:40,510 --> 00:15:46,029
+by rotating that light 90 degrees and then
+erase it by filtering it 45 degrees, that
+
+168
+00:15:46,029 --> 00:15:51,920
+is an actual concrete example of a quantum
+eraser. And I can't show you the interference
+
+169
+00:15:51,920 --> 00:15:58,089
+part of it but I can show you the erasure
+part. So what I have here is some Polaroid
+
+170
+00:15:58,089 --> 00:16:03,899
+film, this is the same stuff that you find
+in polarized sunglasses. And, I first want
+
+171
+00:16:03,899 --> 00:16:10,899
+to convince you, has anyone not played with
+this stuff before? Okay, so again, real quick.
+
+172
+00:16:10,899 --> 00:16:16,220
+If the--if the axis of the film are aligned
+then you can see through it. Can everybody
+
+173
+00:16:16,220 --> 00:16:22,959
+see through this? And if I rotate it at 90
+degrees then you can't see through it anymore
+
+174
+00:16:22,959 --> 00:16:27,660
+and that effect is independent of the absolute
+orientation of the film so the light that's
+
+175
+00:16:27,660 --> 00:16:33,730
+going through to your eyes starts at unpolarized
+over here, it gets--passes through this film
+
+176
+00:16:33,730 --> 00:16:39,810
+and becomes polarized, let's say in this direction,
+and I can demonstrate then that it has become
+
+177
+00:16:39,810 --> 00:16:45,760
+polarized in that direction by filtering it
+out using a filter at 90 degrees. And there's
+
+178
+00:16:45,760 --> 00:16:51,450
+also this cool adjunct to the experiment that
+you can do by adding a filter at 45 degrees.
+
+179
+00:16:51,450 --> 00:16:54,649
+If you put it in front or behind, nothing
+happens which is pretty much what you--what
+
+180
+00:16:54,649 --> 00:17:01,980
+you'd expect. But if you slide this in between,
+then suddenly you can see through it again.
+
+181
+00:17:01,980 --> 00:17:09,740
+Pretty cool, huh? And the reason for that
+is because if you start out with polarized
+
+182
+00:17:09,740 --> 00:17:13,949
+light and you filter it at 45 degrees then
+some of it gets through and it's now polarized
+
+183
+00:17:13,949 --> 00:17:18,620
+in this direction. And now I can do the same
+operation again, which is now the relative
+
+184
+00:17:18,620 --> 00:17:23,870
+orientation of these two are 45 degrees so
+some of it gets through again. But that's
+
+185
+00:17:23,870 --> 00:17:32,289
+not what I want to show you, that's not the
+cool part. Cool part is this stuff. This is
+
+186
+00:17:32,289 --> 00:17:36,679
+what they didn't show you, what they didn't
+show you in high school. This film is actually
+
+187
+00:17:36,679 --> 00:17:45,929
+a polarization rotator. If I'd stick this
+in here, I can actually take this light that's
+
+188
+00:17:45,929 --> 00:17:49,769
+polarizing this direction, I can rotate it
+to 90 degrees that it's polarizing the same
+
+189
+00:17:49,769 --> 00:17:56,259
+direction as this film. And the thing to notice
+here is that the apparent brightness here
+
+190
+00:17:56,259 --> 00:18:01,799
+in the center is the same as it is up here.
+There's before, if we did the high school
+
+191
+00:18:01,799 --> 00:18:20,320
+version of the experiment--whoops--you've
+gotten quite a bit of loss. 
+So, I really can take--I can take light and
+
+192
+00:18:20,320 --> 00:18:27,480
+I can polarize it and I can take that polarized
+light and I can rotate it by 90 degrees and
+
+193
+00:18:27,480 --> 00:18:31,749
+so I can create two different paths so I can
+tell which way the light went through. I can
+
+194
+00:18:31,749 --> 00:18:34,989
+tell whether the light is going through here
+or whether the light is going through here.
+
+195
+00:18:34,989 --> 00:18:41,679
+Actually, let me back up a step. My claim
+is, without this filter, it's a little hard.
+
+196
+00:18:41,679 --> 00:18:45,389
+My claim is that the light that's coming out
+of here is different than the light that's
+
+197
+00:18:45,389 --> 00:18:49,679
+coming out of here, so I can tell which way
+it went. And the way that I can demonstrate
+
+198
+00:18:49,679 --> 00:18:56,059
+that to you is with this measurement apparatus
+that lets me filter out this light and tell
+
+199
+00:18:56,059 --> 00:19:01,039
+which way it went. So this is a measurement.
+This should collapse the wave function according
+
+200
+00:19:01,039 --> 00:19:09,379
+to the Copenhagen interpretation. But I can
+undo this, and the way I undo it is by filtering
+
+201
+00:19:09,379 --> 00:19:14,679
+at 45 degrees. And now, I have to ask you
+for a little bit of suspension of disbelief
+
+202
+00:19:14,679 --> 00:19:19,009
+because this is not high precision optical
+equipment and my angles aren't aligned just
+
+203
+00:19:19,009 --> 00:19:23,299
+right. And if you look very closely, you will
+actually be able to tell the difference between
+
+204
+00:19:23,299 --> 00:19:31,009
+these two paths, but the difference is now
+much less than it was before. See that? Oh,
+
+205
+00:19:31,009 --> 00:19:37,960
+I'm sorry. I didn't realize there are people
+over there. Okay, I'll just show you all this
+
+206
+00:19:37,960 --> 00:19:44,679
+at close range afterwards. So there's a measurement.
+There's an erasure of that measurement. The
+
+207
+00:19:44,679 --> 00:19:51,899
+light is going this way so the--in time, the
+erasure has to happen after the measurement.
+
+208
+00:19:51,899 --> 00:19:55,659
+And if I actually had a laser to shine through
+this, I can demonstrate to you that the interference
+
+209
+00:19:55,659 --> 00:20:03,149
+would go away and would come back. So again,
+these are not subtle effects and they're not
+
+210
+00:20:03,149 --> 00:20:09,730
+effects that you necessarily need high precision
+equipment to reproduce, it's an everyday experiment.
+
+211
+00:20:09,730 --> 00:20:19,070
+This is $30 worth of polarizing film. So this
+leaves us with the philosophical conundrum
+
+212
+00:20:19,070 --> 00:20:26,440
+that is embodied by Schrodinger's cat. If
+there's no collapse, then if we set up a radioactive
+
+213
+00:20:26,440 --> 00:20:31,049
+source that triggers some kind of a mechanism
+that will break a bottle of poison that will
+
+214
+00:20:31,049 --> 00:20:36,989
+kill a cat that's in a sealed box, can this--what
+happens? Quantum mechanics says that this
+
+215
+00:20:36,989 --> 00:20:43,559
+cat isn't a quantum superposition of being
+alive and dead which is intuitively absurd
+
+216
+00:20:43,559 --> 00:20:50,779
+but as far as we can tell, that's really what
+happens. So if that's not intractably weird
+
+217
+00:20:50,779 --> 00:20:57,470
+enough for you, this is the third quantum
+mystery entanglement which is usually described
+
+218
+00:20:57,470 --> 00:21:02,009
+as sort of an ancillary phenomenon to all
+these other mysteries. And, oh, yes. It's
+
+219
+00:21:02,009 --> 00:21:08,279
+sort of--oh, by the way, has everybody seen
+this picture? Has anybody not seen this picture
+
+220
+00:21:08,279 --> 00:21:14,690
+before? Okay. This is what the production
+of quantum entangled photons really looks
+
+221
+00:21:14,690 --> 00:21:19,019
+like. You take a--this is not--this is not
+an actual photograph, this is a drawing. But
+
+222
+00:21:19,019 --> 00:21:22,850
+this is an actual photograph of the output
+of one of these gadgets. There's an ultraviolet
+
+223
+00:21:22,850 --> 00:21:28,450
+laser that shines through a crystal of some
+material called beta barium borate, details
+
+224
+00:21:28,450 --> 00:21:33,489
+don't matter, and this crystal has this interesting
+property that it will absorb photons of ultraviolet
+
+225
+00:21:33,489 --> 00:21:39,029
+light and reemit them in--and that it'll kick
+an electron up to an excited state, and then
+
+226
+00:21:39,029 --> 00:21:42,989
+that electron will drop back down to its ground
+state and it will do it in two steps. And
+
+227
+00:21:42,989 --> 00:21:48,379
+so it will kick up in one step, down in two,
+and in the process of coming back down, it
+
+228
+00:21:48,379 --> 00:21:55,440
+will emit two photons instead of one so what
+comes out of this system is visible light.
+
+229
+00:21:55,440 --> 00:22:01,029
+And the photons always come out in pairs and
+they come out in matched sets because of fundamental
+
+230
+00:22:01,029 --> 00:22:09,029
+conservation laws. We have law--conservation
+of energy and momentum and so--and electron--a
+
+231
+00:22:09,029 --> 00:22:14,179
+photon that, say, comes out over here is a
+red, photon will be matched by one that comes
+
+232
+00:22:14,179 --> 00:22:20,509
+out over here as a blue photon, and the same
+thing over here. And in the middle, you get
+
+233
+00:22:20,509 --> 00:22:25,350
+this band where you get photons that come
+out at the same wavelength and it just matched
+
+234
+00:22:25,350 --> 00:22:29,669
+in position so a photon over here will be
+matched by one over here. And they'll also
+
+235
+00:22:29,669 --> 00:22:37,489
+be matched in polarization as it turns out.
+So this is the way it's depicted conceptually.
+
+236
+00:22:37,489 --> 00:22:41,190
+You have these ultraviolet lasers. It's called
+a down convert--this crystal is called a down
+
+237
+00:22:41,190 --> 00:22:47,399
+converter, and you send these photons off
+to opposite sides of the universe and what--and
+
+238
+00:22:47,399 --> 00:22:53,619
+then you measure some property out of them.
+Let's say, we split them according to polarization
+
+239
+00:22:53,619 --> 00:22:56,799
+or position them in, it doesn't matter, any
+quantum state variables, as long as you can
+
+240
+00:22:56,799 --> 00:23:01,489
+filter them that way and what you find is
+that they're perfectly anti-correlated because
+
+241
+00:23:01,489 --> 00:23:05,350
+of the conservations laws. So if you get a
+photon up here, on the right side of the experiment
+
+242
+00:23:05,350 --> 00:23:09,889
+at the upper detector, that will always be
+matched by a photon over here on the left
+
+243
+00:23:09,889 --> 00:23:17,539
+side of the experiment at the down detector.
+An unfortunate artifact of the English language
+
+244
+00:23:17,539 --> 00:23:21,220
+that words "left" and "lower" both start with
+a letter L so I'm going to switch back and
+
+245
+00:23:21,220 --> 00:23:29,440
+forth between them. This is what the--what
+Einstein famously called, "Spooky action at
+
+246
+00:23:29,440 --> 00:23:36,700
+a distance." If you take this phenomenon,
+this isn't controversial, this is an experimental--an
+
+247
+00:23:36,700 --> 00:23:42,109
+undeniable experimental result, this really
+does happen, combine that with a fact if there
+
+248
+00:23:42,109 --> 00:23:47,659
+is no collapse with the wave function and
+the inescapable conclusion seems to be that
+
+249
+00:23:47,659 --> 00:23:52,729
+as it was put in Wired as recently as last
+June, that when an aspect of one photon's
+
+250
+00:23:52,729 --> 00:23:58,629
+quantum state is measured, the other photon
+changes in response even when the two photons
+
+251
+00:23:58,629 --> 00:24:03,809
+are separated by large distances. And this
+would seem to be impossible because it would
+
+252
+00:24:03,809 --> 00:24:08,649
+seem to violate relativity because it's an
+instantaneous effect and we know that we can't
+
+253
+00:24:08,649 --> 00:24:12,139
+communicate information faster than light,
+because if we could do that then we could
+
+254
+00:24:12,139 --> 00:24:16,159
+communicate information back within time and
+that would cause all kinds of problems with
+
+255
+00:24:16,159 --> 00:24:22,820
+causality and just be a horrible mess. So
+these instantaneous effects are supposed to
+
+256
+00:24:22,820 --> 00:24:26,739
+be impossible but there is one thing that
+comes to save us and that is this quantum
+
+257
+00:24:26,739 --> 00:24:33,879
+randomness. We don't actually have any control
+over whether the photon on one side ends up
+
+258
+00:24:33,879 --> 00:24:38,619
+at the upper detector or the lower detector
+and so we can't actually send information
+
+259
+00:24:38,619 --> 00:24:43,470
+up here to there, we know that if we see the
+photon up on the upper detector over here,
+
+260
+00:24:43,470 --> 00:24:49,369
+then our counterpart across the universe must
+have seen it at the lower detector over there
+
+261
+00:24:49,369 --> 00:24:54,940
+but we haven't transmitted any information
+from A to B. And you can actually prove this
+
+262
+00:24:54,940 --> 00:25:01,809
+mathematically that it's impossible to transmit
+information using this phenomenon. But it
+
+263
+00:25:01,809 --> 00:25:11,229
+turns out that the proof of the impossibility
+has a loophole. So that is the end of step
+
+264
+00:25:11,229 --> 00:25:16,269
+one. I'm now going to on the step two and
+show why the story that I've just told you
+
+265
+00:25:16,269 --> 00:25:22,649
+can't possibly be true. So let's summarize
+and take stock. A split/combine experiment
+
+266
+00:25:22,649 --> 00:25:28,659
+produces interference. Any which-way measurement
+destroys that interference, there's some which-way
+
+267
+00:25:28,659 --> 00:25:32,539
+that the proto measurements that we can go
+back and erase after the fact and restore
+
+268
+00:25:32,539 --> 00:25:41,059
+the interference and measurements on entangled
+particles are perfectly anti-correlated. So
+
+269
+00:25:41,059 --> 00:25:45,759
+the quantum conspiracy is that all of these
+things cannot possibly be true and here's
+
+270
+00:25:45,759 --> 00:25:53,309
+why. So this is a thought experiment. This
+experiment has not actually been done that,
+
+271
+00:25:53,309 --> 00:26:00,879
+again, with tongue slightly in cheek, I've
+done the Einstein-Podolsky-Rosen-Garret paradox,
+
+272
+00:26:00,879 --> 00:26:08,809
+and it's two-slit experiments that are fed
+by quantum entangled photons produced by one
+
+273
+00:26:08,809 --> 00:26:12,450
+of these down converter setups in the middle,
+and I want you to consider the question of
+
+274
+00:26:12,450 --> 00:26:21,440
+if we measure on the left, do we destroy the
+interference on the right? So, if the answer
+
+275
+00:26:21,440 --> 00:26:26,519
+is yes, then we have faster-than-light communication
+because this interference is a macroscopic
+
+276
+00:26:26,519 --> 00:26:31,039
+effect. It's really easy to see if you have
+interference or not. You just look at it with
+
+277
+00:26:31,039 --> 00:26:36,979
+your eyes. You don't need any kind of delicate
+detectors or anything so you just measure
+
+278
+00:26:36,979 --> 00:26:41,739
+over here and take measurement away, measure,
+take the measurement away, and over there
+
+279
+00:26:41,739 --> 00:26:44,919
+on the other side of the universe, this interference
+pattern will come and go and you can send
+
+280
+00:26:44,919 --> 00:26:49,979
+Morse code instantaneously. That's obviously
+impossible, so the answer must be no. But
+
+281
+00:26:49,979 --> 00:26:56,229
+if the answer is no, then we know the position
+of one particle but we have interference regardless
+
+282
+00:26:56,229 --> 00:27:02,700
+and that contradicts the fundamental principle
+of quantum mechanics, which is that we can't
+
+283
+00:27:02,700 --> 00:27:10,489
+know the position of the particle and still
+have it interfere. Now, this is not yet an
+
+284
+00:27:10,489 --> 00:27:16,049
+iron-clad argument. There is one other possibility
+that I have not mentioned here. Can anybody
+
+285
+00:27:16,049 --> 00:27:22,960
+think of what it is? Any of the physicists
+in the crowd? Oh, good. So, this one last
+
+286
+00:27:22,960 --> 00:27:27,419
+possibility, and that is that if there was
+no interference to begin with. It might be
+
+287
+00:27:27,419 --> 00:27:33,109
+that entanglement sort of counts as one of
+these subtle proto-measurements that destroys
+
+288
+00:27:33,109 --> 00:27:36,700
+the interference so we didn't have any interference
+to begin with. But it turns out that doesn't
+
+289
+00:27:36,700 --> 00:27:41,029
+get us out of this faster-than-light conundrum
+because, fine, if that's the case, then we
+
+290
+00:27:41,029 --> 00:27:46,229
+can still produce faster-than-light communications
+by putting in a quantum eraser and destroy
+
+291
+00:27:46,229 --> 00:27:49,999
+the entanglement. Entanglement is a very--is
+a very delicate property. Physicists work
+
+292
+00:27:49,999 --> 00:27:55,169
+very hard to produce it and maintain it. It's
+very easy to destroy. So, just destroy the
+
+293
+00:27:55,169 --> 00:27:58,509
+entanglement and produce interference where
+there was none before and, again, we have
+
+294
+00:27:58,509 --> 00:28:05,700
+a faster-than-light signal-ly mechanism. Now,
+that is a very compelling argument that the
+
+295
+00:28:05,700 --> 00:28:11,679
+story that I have told you, the usual quantum
+story is wrong. That argument is, in fact,
+
+296
+00:28:11,679 --> 00:28:18,229
+correct. The story that I have told up until
+now is, in fact, wrong, and that's why.
+
+297
+00:28:18,229 --> 00:28:22,649
+>> You said this experiment hasn't been done,
+why not?
+
+298
+00:28:22,649 --> 00:28:27,489
+>> GARRET: Because all physicists know what
+the outcome will be. And I'm about--I'm about
+
+299
+00:28:27,489 --> 00:28:31,049
+to tell you what the outcome will be. And
+by the time I finish telling you, you will
+
+300
+00:28:31,049 --> 00:28:34,090
+be convinced enough that the outcome is what
+I tell you that it will be that you won't
+
+301
+00:28:34,090 --> 00:28:39,159
+need--feel the need to do the experiment either.
+I promise you--hmm?
+
+302
+00:28:39,159 --> 00:28:42,889
+>> GLECKLER: Why don't you repeat the question.
+>> GARRET: Oh, I'm sorry. The question was,
+
+303
+00:28:42,889 --> 00:28:45,469
+why hasn't this experiment been done. Yeah?
+>> So the entanglement is about polarization,
+
+304
+00:28:45,469 --> 00:28:57,139
+in which way it goes through a splitter, is
+that about exactly the same polarization,
+
+305
+00:28:57,139 --> 00:28:58,359
+we know they're the same?
+>> GARRET: That's right. So, I assuming here,
+
+306
+00:28:58,359 --> 00:29:01,929
+like I said, there are lots of different ways
+that you can do the split-combine experiments.
+
+307
+00:29:01,929 --> 00:29:04,749
+You can use some thing called a Mach-Zehnder
+interferometer. You can use something called
+
+308
+00:29:04,749 --> 00:29:08,229
+a Stern-Gerlach device. You can, you know,
+lots of different ways. When I talk about
+
+309
+00:29:08,229 --> 00:29:11,779
+polarization, the way that the splitting is
+done is with the device called the polarizing
+
+310
+00:29:11,779 --> 00:29:16,629
+beam splitter, which is exactly like one of
+these, except instead of just absorbing half
+
+311
+00:29:16,629 --> 00:29:20,889
+the photons and letting half the--half of
+them go through, it reflects them. So it look
+
+312
+00:29:20,889 --> 00:29:27,759
+like a mirror, a half-silvered mirror, and
+what comes out this direction is photons that
+
+313
+00:29:27,759 --> 00:29:32,719
+are polarized one direction and what gets
+reflected at the other direction are photons
+
+314
+00:29:32,719 --> 00:29:40,080
+that are polarized in the opposite direction.
+Okay, so we are now in the depths of the rabbit
+
+315
+00:29:40,080 --> 00:29:47,019
+hole and now, it's time to find our way back
+out. We're going to do some math. Don't panic,
+
+316
+00:29:47,019 --> 00:29:53,450
+it will not be as bad as you think. This is
+the mathematics of quantum mechanics right
+
+317
+00:29:53,450 --> 00:30:00,580
+here. This is the famous Schrodinger wave
+equation. It's--this is the free variable
+
+318
+00:30:00,580 --> 00:30:06,580
+here is this thing called psi. Psi is the
+quantum wave function and it obeys the dynamics
+
+319
+00:30:06,580 --> 00:30:11,109
+of this partial differential equation, which
+those of you who are proficient in partial
+
+320
+00:30:11,109 --> 00:30:16,049
+differential equations, will recognize as
+a wave equation like any other equation that
+
+321
+00:30:16,049 --> 00:30:22,330
+describes waves, and that's why these particles
+seem to propagate like wave because this is
+
+322
+00:30:22,330 --> 00:30:29,619
+the map that describes how they propagate.
+The point here is that these, the dynamics
+
+323
+00:30:29,619 --> 00:30:37,450
+of this thing, are continuous and time-reversible.
+All wave equations have continuous time-reversible
+
+324
+00:30:37,450 --> 00:30:43,299
+dynamics. And the second part of quantum mechanics
+is that you take this quantum wave function,
+
+325
+00:30:43,299 --> 00:30:49,549
+which is a function of position and time and
+is a complex number, you take the norm, the
+
+326
+00:30:49,549 --> 00:30:53,679
+magnitude of that complex number and square
+it, and that gives you the probability of
+
+327
+00:30:53,679 --> 00:31:00,639
+measuring a particle at this position X at
+a time T. That's really all you need to know
+
+328
+00:31:00,639 --> 00:31:05,379
+about the mathematics of quantum mechanics.
+There are some things to note about this.
+
+329
+00:31:05,379 --> 00:31:10,639
+There is this distinction between the underlying
+amplitudes, which are complex numbers, and
+
+330
+00:31:10,639 --> 00:31:15,219
+the probabilities, which are of where we find
+these particles, which is the only thing that
+
+331
+00:31:15,219 --> 00:31:21,179
+we can measure which are real numbers. And
+the reason that particles can interfere is
+
+332
+00:31:21,179 --> 00:31:26,609
+because complex numbers with magnitudes greater
+than zero can add to zero. You can have a
+
+333
+00:31:26,609 --> 00:31:30,489
+complex number that points off in this direction,
+another complex number that point off in that
+
+334
+00:31:30,489 --> 00:31:35,080
+direction. They always have magnitudes greater
+than zero but they can add and destructively
+
+335
+00:31:35,080 --> 00:31:41,099
+interfere. The dynamics are continuous, time-symmetric,
+fully deterministic and hence, reversible,
+
+336
+00:31:41,099 --> 00:31:45,309
+and so there's no place where you--there's
+no place you can find anything that resembles
+
+337
+00:31:45,309 --> 00:31:55,489
+collapse in this math. And no randomness either,
+by the way. Going from amplitudes to probabilities
+
+338
+00:31:55,489 --> 00:32:01,690
+by taking this wave function and squaring
+it has no physical justification or whatsoever.
+
+339
+00:32:01,690 --> 00:32:09,309
+It's purely a hack. But it's a hack that works
+really, really well. So here's what the actual
+
+340
+00:32:09,309 --> 00:32:16,509
+math looks like for the two-slit experiment.
+This is, and if you go to actual papers on
+
+341
+00:32:16,509 --> 00:32:19,249
+quantum physics you won't find this in the
+popular press, this is what you will find
+
+342
+00:32:19,249 --> 00:32:28,999
+in physics journals. This is--or physics texts--this
+is the state, the amplitude of the photon
+
+343
+00:32:28,999 --> 00:32:33,489
+being at the upper detector. This is the amplitude
+of photon being at the lower detector and
+
+344
+00:32:33,489 --> 00:32:37,759
+we have to divide by the square root of two
+in order to make the total probability come
+
+345
+00:32:37,759 --> 00:32:47,639
+out to be one. So to figure out the probability,
+we take this number, which is a complex number,
+
+346
+00:32:47,639 --> 00:32:52,599
+and take the modules and square it. And when
+we do that, it's almost exactly the same as
+
+347
+00:32:52,599 --> 00:32:56,869
+just squaring A plus B in 8th grade algebra
+class, you get A squared plus B squared plus
+
+348
+00:32:56,869 --> 00:33:01,159
+AB plus BA. You have to take these complex
+conjugates because they're complex numbers,
+
+349
+00:33:01,159 --> 00:33:04,629
+and the square root of negative one pops in
+there to do some weird things, those kind
+
+350
+00:33:04,629 --> 00:33:10,700
+of details don't matter. The point is this
+is a complex number, psi U is a complex number.
+
+351
+00:33:10,700 --> 00:33:16,009
+Its magnitude is a real number and when you
+square it it's a positive real number. So
+
+352
+00:33:16,009 --> 00:33:19,289
+here we have a positive real number, here
+we have another positive real number, the
+
+353
+00:33:19,289 --> 00:33:24,929
+sum of those two has to be a positive real
+number. But over here we have two different
+
+354
+00:33:24,929 --> 00:33:29,210
+complex numbers and two different complex
+numbers that were multiplied together so this
+
+355
+00:33:29,210 --> 00:33:35,409
+sum can be negative. So this is--this is where
+the interference comes from. This is the mathematical
+
+356
+00:33:35,409 --> 00:33:41,719
+manifestation of interference in quantum mechanics.
+That's what it looks like in terms of Greek
+
+357
+00:33:41,719 --> 00:33:47,889
+symbols. So, what happens when we add detectors?
+Well, when we add detectors, the amplitude
+
+358
+00:33:47,889 --> 00:33:53,619
+starts to look like this. We have the amplitude
+for the photon to be at the upper detector
+
+359
+00:33:53,619 --> 00:33:59,210
+times the amplitude for the detector to be
+in the state where it shows that the particle
+
+360
+00:33:59,210 --> 00:34:04,839
+is at the upper detector and the same thing
+at the lower detector. So this is just the
+
+361
+00:34:04,839 --> 00:34:08,700
+mathematical description of that. And when
+you--when you--when you take the amplitude
+
+362
+00:34:08,700 --> 00:34:13,830
+to that and square it, here's what you get,
+same thing as before, psi U squared plus psi
+
+363
+00:34:13,830 --> 00:34:23,070
+L squared. And this, which looks an awful
+lot like an interference term, right, which
+
+364
+00:34:23,070 --> 00:34:27,379
+is weird because I just got though telling
+you that if we have a detector that we know--tells
+
+365
+00:34:27,379 --> 00:34:32,470
+us which way the particle went, that destroys
+the interference. Well, there's this subtle
+
+366
+00:34:32,470 --> 00:34:37,000
+difference here between what we have now-what
+we have before, and that's this weird notation
+
+367
+00:34:37,000 --> 00:34:41,110
+here, which is called the rock--bracket notation.
+You don't need to concern yourself with it.
+
+368
+00:34:41,110 --> 00:34:48,260
+Just take my word for it when I tell you that
+this quantity here is the amplitude for the
+
+369
+00:34:48,260 --> 00:34:54,640
+detector to spontaneously switch between indicating
+that the particle is at the upper slit and
+
+370
+00:34:54,640 --> 00:34:59,280
+the lower slit. In other words, it's a measure
+of the reliability of the detector. That just
+
+371
+00:34:59,280 --> 00:35:05,580
+comes out when you do the math. And if the
+detector is working properly, that value--oops--this--this
+
+372
+00:35:05,580 --> 00:35:16,820
+value is the amplitude for it to spontaneously
+switch between UNL and spontaneously switch
+
+373
+00:35:16,820 --> 00:35:24,640
+between L and U, those are both zero so this
+term goes away. That's the math of how measurement
+
+374
+00:35:24,640 --> 00:35:29,870
+destroys probability. And the interesting
+thing about this is that measurement is a
+
+375
+00:35:29,870 --> 00:35:34,320
+continuum. It's not a dichotomy. The math
+tells us that we can measure just a little
+
+376
+00:35:34,320 --> 00:35:41,850
+bit or we can measure mostly but not quite.
+And we have vary--it's a varying levels of
+
+377
+00:35:41,850 --> 00:35:47,160
+interference that we get depending on whether
+the measurement that we're making is reliable
+
+378
+00:35:47,160 --> 00:35:55,300
+or not. That's what the math says. So what
+about entanglement? Well, this is, if you
+
+379
+00:35:55,300 --> 00:36:01,530
+go to a physics paper that talks about entangled
+particles, this is what you will see as the
+
+380
+00:36:01,530 --> 00:36:06,050
+mathematical description of a pair of entangled
+particles. What this means is that you have
+
+381
+00:36:06,050 --> 00:36:12,260
+an amplitude for the particle on the left
+to be in the up state and the particle on
+
+382
+00:36:12,260 --> 00:36:17,250
+the right to be in the down state superimposed
+with an amplitude for the particle on the
+
+383
+00:36:17,250 --> 00:36:21,070
+left to be in the down state and the particle
+on the right to be in the up state; again,
+
+384
+00:36:21,070 --> 00:36:31,840
+divided by the square root of two. Now, this
+looks a lot like the--or the unmeasured two-slit
+
+385
+00:36:31,840 --> 00:36:37,920
+description. But there's some notational sleight
+of hand going on here because this is shorthand
+
+386
+00:36:37,920 --> 00:36:45,090
+for this and it's an unfamiliar notation.
+This vertical bar, followed by the bracket,
+
+387
+00:36:45,090 --> 00:36:49,870
+this is a term. So you got--this is a quantum
+wave function here. This is another quantum
+
+388
+00:36:49,870 --> 00:36:55,750
+wave function here. This is the wave function
+for the upper particle. This is a wave function
+
+389
+00:36:55,750 --> 00:37:01,420
+for the lower particle. Another way to write
+that is--you don't have to use arrows, that's
+
+390
+00:37:01,420 --> 00:37:05,500
+just a notational convenience, so I could
+call this the left upper particle and the
+
+391
+00:37:05,500 --> 00:37:10,310
+right downward particle, and the left downward
+particle on the right upper particle. And
+
+392
+00:37:10,310 --> 00:37:18,980
+this is just another way of writing this Psi,
+this quantum wave function. So this and this
+
+393
+00:37:18,980 --> 00:37:22,860
+are the same thing in different notations.
+And this should now look familiar. This is
+
+394
+00:37:22,860 --> 00:37:34,580
+exactly the same as--oops--as this, the two-slit
+experiment with the detector, module of a
+
+395
+00:37:34,580 --> 00:37:43,700
+few labels. And so, that is now the answer
+to the first part of the EPRG Paradox. In
+
+396
+00:37:43,700 --> 00:37:49,900
+fact, entanglement does count as a proto-measurement
+that destroys interference. But it's actually
+
+397
+00:37:49,900 --> 00:37:55,580
+much deeper that that. According to the math,
+entanglement and measurement or the exact
+
+398
+00:37:55,580 --> 00:38:03,650
+same phenomenon, the math is exactly the same,
+and that is why entanglement destroys interference
+
+399
+00:38:03,650 --> 00:38:07,400
+because entanglement is measurement. And I
+have a lot more to say about that later in
+
+400
+00:38:07,400 --> 00:38:15,140
+the talk. So okay, so there's no interference
+but now what about this last--the idea of
+
+401
+00:38:15,140 --> 00:38:20,370
+creating the interference using a quantum
+eraser. So let's take another look at our--I'm
+
+402
+00:38:20,370 --> 00:38:26,820
+running little short on time so I'm just going
+to blast through this. This is what the state
+
+403
+00:38:26,820 --> 00:38:34,520
+equation looks like for the quantum eraser
+after the so-called measurement but before
+
+404
+00:38:34,520 --> 00:38:38,350
+erasure. So you have an upper photon that's
+horizontally polarized because we've--let's
+
+405
+00:38:38,350 --> 00:38:46,550
+assume we start with a vertically polarized
+light going in here and we measure by rotating
+
+406
+00:38:46,550 --> 00:38:53,510
+90 degrees. So we have now the upper photon
+rotated from vertical to horizontal and the
+
+407
+00:38:53,510 --> 00:39:00,140
+lower photon still vertical and this you will
+now--you should recognize as a measured and
+
+408
+00:39:00,140 --> 00:39:06,820
+therefore non-interfering state. And it turns
+out that if you filter now at 45 degrees this
+
+409
+00:39:06,820 --> 00:39:13,840
+is the state function, the quantum wave function,
+that you end up with. You now have a photon
+
+410
+00:39:13,840 --> 00:39:19,450
+that's either in the upper or lower slit and
+that's either horizontally or vertically polarized,
+
+411
+00:39:19,450 --> 00:39:24,540
+and this kind of makes sense because if you
+think of these as vectors and you have a horizontal
+
+412
+00:39:24,540 --> 00:39:29,090
+polarization plus a vertical polarization,
+that's a 45-degree polarization, which is
+
+413
+00:39:29,090 --> 00:39:36,540
+exactly what you would expect to see if we're
+filtering it 45 degrees, right? But remember
+
+414
+00:39:36,540 --> 00:39:40,560
+the square root of two term here that I told
+you was there in order to make the total probability
+
+415
+00:39:40,560 --> 00:39:47,370
+to come out to be one? Now, that's a two root
+though, and if you run the math on this you
+
+416
+00:39:47,370 --> 00:39:54,580
+find out that the total probability is not
+one, it's one-half. So either we've made a
+
+417
+00:39:54,580 --> 00:40:02,240
+mistake or half our photons have gone missing.
+Well, in fact, half our photons have gone
+
+418
+00:40:02,240 --> 00:40:06,410
+missing which is also shouldn't be too surprising
+because we filtered--we put this 45-degree--we
+
+419
+00:40:06,410 --> 00:40:13,700
+put this filter in place. This filter is filtering
+out half the photons that go through it. If
+
+420
+00:40:13,700 --> 00:40:18,230
+it--if they come in at 45 degrees then half
+of them come out polarized this way and the
+
+421
+00:40:18,230 --> 00:40:26,390
+other half get blocked. So it turns out that
+the other half, the half that didn't get through,
+
+422
+00:40:26,390 --> 00:40:30,440
+have a different wave function that has a
+negative sign over here, which again, makes
+
+423
+00:40:30,440 --> 00:40:37,120
+intuitive sense because the filter lets these--the
+filter is at 45 degrees so it lets this axis
+
+424
+00:40:37,120 --> 00:40:46,800
+through and this axis, which is the H minus
+V axis it blocks. And these photons interfere
+
+425
+00:40:46,800 --> 00:40:53,730
+with themselves and these photons also interfere
+with themselves. So the photons that passed
+
+426
+00:40:53,730 --> 00:40:58,350
+through the filter display interference fringes
+and the photons that don't pass also display
+
+427
+00:40:58,350 --> 00:41:02,460
+interference but it turns out that they're
+anti-fringes. They're exactly like the bright
+
+428
+00:41:02,460 --> 00:41:08,340
+spots in the interference fringes for the
+photons that got filtered out, exactly lined
+
+429
+00:41:08,340 --> 00:41:14,580
+up with the dark spots of the fringes for
+the photons that were let through. And they
+
+430
+00:41:14,580 --> 00:41:19,530
+sum together to produce what we perceived
+when we look at it as non-interference. So
+
+431
+00:41:19,530 --> 00:41:23,480
+this quantum eraser doesn't actually erase
+anything and it doesn't produce interference,
+
+432
+00:41:23,480 --> 00:41:28,560
+it just filters out interference that was
+actually already there all along. And it turns
+
+433
+00:41:28,560 --> 00:41:32,590
+out that we can actually do this in the EPR
+experiment too. And the way that we--but in
+
+434
+00:41:32,590 --> 00:41:36,660
+order to do it, we have to transmit classical
+information from one side of the other in
+
+435
+00:41:36,660 --> 00:41:42,240
+order to do the filtering. The way it works
+is you make a record of all the photons that
+
+436
+00:41:42,240 --> 00:41:46,660
+you collected over here and keep it in order
+so you've got this record of first photon
+
+437
+00:41:46,660 --> 00:41:50,660
+was at the upper detector, the second photon
+was at the down detector, and so on and so
+
+438
+00:41:50,660 --> 00:41:55,660
+forth, and over here you keep track of which
+photons ended up where on your screen, and
+
+439
+00:41:55,660 --> 00:42:00,170
+then you take this record and you transmit
+it over here by some classical slower-than-light
+
+440
+00:42:00,170 --> 00:42:04,050
+channel. And you look at all the up photons
+and sure enough there's an interference pattern,
+
+441
+00:42:04,050 --> 00:42:06,850
+and you look at all the down photons and sure
+enough there's an interference pattern. But
+
+442
+00:42:06,850 --> 00:42:13,450
+the only way to see that is to take classical
+information and move it from here to here.
+
+443
+00:42:13,450 --> 00:42:19,690
+And that is the last nail in the coffin. I
+was very disappointed when I learned this
+
+444
+00:42:19,690 --> 00:42:24,230
+10 years ago because I was really counting
+on winning a Nobel Prize and taking over the
+
+445
+00:42:24,230 --> 00:42:31,590
+world but, oh, well, this is the next best
+thing. So the take-home message up to this
+
+446
+00:42:31,590 --> 00:42:39,500
+point is measurement and entanglement are
+the same phenomenon, and what you will find
+
+447
+00:42:39,500 --> 00:42:45,820
+in many, many accounts and even some professional
+accounts, is that they're completely different.
+
+448
+00:42:45,820 --> 00:42:50,810
+That measurement is this common everyday thing
+that we can sort of intuitively grasp and
+
+449
+00:42:50,810 --> 00:42:57,320
+entanglement is the quintessential quantum
+mystery and in fact they are really the exact
+
+450
+00:42:57,320 --> 00:43:02,510
+same thing. Now, having come to that realization
+we can now tell a different story about quantum
+
+451
+00:43:02,510 --> 00:43:09,050
+mechanics that to my software engineer's mind
+is much more intuitively pleasing than any
+
+452
+00:43:09,050 --> 00:43:15,110
+of the other competing alternatives. So Copenhagen
+is the most popular but as we've seen it,
+
+453
+00:43:15,110 --> 00:43:22,920
+it's scientifically untenable. There just
+is no collapse. Their--the next most popular
+
+454
+00:43:22,920 --> 00:43:28,280
+interpretation is the so-called "many worlds"
+interpretation where it says that anytime
+
+455
+00:43:28,280 --> 00:43:34,630
+that a particle can go multiple ways, the
+entire universe splits and the math actually
+
+456
+00:43:34,630 --> 00:43:40,280
+supports that, but I personally find that
+that takes a heavier toll on my intuition
+
+457
+00:43:40,280 --> 00:43:44,490
+than I'm really willing to concede. There's
+another thing that nobody's ever heard of
+
+458
+00:43:44,490 --> 00:43:48,520
+called the "transactional" interpretation
+by fellow named Cramer at the University of
+
+459
+00:43:48,520 --> 00:43:50,940
+Washington. Actually, if you're really interested
+in this stuff, I encourage you to take a look
+
+460
+00:43:50,940 --> 00:43:58,050
+at because it is kind of interesting. It postulates
+that the backwards in time solution for Maxwell's
+
+461
+00:43:58,050 --> 00:44:03,200
+equation are physically real and if you make
+that assumption then you can explain a lot
+
+462
+00:44:03,200 --> 00:44:06,870
+of stuff, but I don't have time to get into
+that. What I want to talk about here is the
+
+463
+00:44:06,870 --> 00:44:12,260
+quantum information theory which I have dubbed
+the "zero-worlds" interpretation of quantum
+
+464
+00:44:12,260 --> 00:44:17,700
+mechanics. It's an extension of classical
+information theory with complex numbers and
+
+465
+00:44:17,700 --> 00:44:22,550
+if you run through that math you get some
+very interesting results. So here is a lightning
+
+466
+00:44:22,550 --> 00:44:27,690
+introduction to classical information theory.
+It's the study of this quantity called the
+
+467
+00:44:27,690 --> 00:44:33,050
+Shannon entropy of a system A, which can be
+in any one of a number of classical states,
+
+468
+00:44:33,050 --> 00:44:37,370
+and it's defined as the sum of the probability
+that the system is in sum state A times the
+
+469
+00:44:37,370 --> 00:44:43,040
+log of that probability and then you take
+a negative sign. And intuitively, it's a measure
+
+470
+00:44:43,040 --> 00:44:48,860
+of the amount of randomness that's in the
+system A. So just to simplify things for the
+
+471
+00:44:48,860 --> 00:44:53,580
+purpose of this talk, if the system has an
+equal probability of being in one of N states,
+
+472
+00:44:53,580 --> 00:44:59,500
+then the entropy is just the log of N. So
+when N is one and the system is definitely
+
+473
+00:44:59,500 --> 00:45:05,410
+in one state then the entropy is zero. And
+if it can be in one of two states with equal
+
+474
+00:45:05,410 --> 00:45:10,770
+probability and we take this log base two,
+we measure information content in bits, then
+
+475
+00:45:10,770 --> 00:45:19,550
+it has one bit of randomness in it. You can
+define all kinds of other derived quantities
+
+476
+00:45:19,550 --> 00:45:23,770
+like the joint entropy of multiple systems
+and the conditional entropy, and this quantity
+
+477
+00:45:23,770 --> 00:45:28,140
+here which is called the information entropy
+which is a measure of how much information
+
+478
+00:45:28,140 --> 00:45:32,960
+a system A contains about a system B, and
+the interesting thing to note about it is
+
+479
+00:45:32,960 --> 00:45:41,110
+it's the sum of some of these other quantities
+that had been defined up here. And the information
+
+480
+00:45:41,110 --> 00:45:46,950
+entropy ranges between zero and one, where
+zero means that this system has no--system
+
+481
+00:45:46,950 --> 00:45:51,930
+A has no information about system B, they're
+completely uncorrelated, and one means that
+
+482
+00:45:51,930 --> 00:45:58,530
+they're perfectly correlated. So for example,
+because they're sums we can describe these
+
+483
+00:45:58,530 --> 00:46:05,730
+quantities as Venn diagrams. So this circle
+here on the left is system A and this circle
+
+484
+00:46:05,730 --> 00:46:14,160
+on the right is the system B, and the total
+entropy is contained inside these circles,
+
+485
+00:46:14,160 --> 00:46:19,430
+the total entropy for each system, and the
+information entropy is here in the intersection,
+
+486
+00:46:19,430 --> 00:46:29,000
+and that leaves the conditional entropy out
+here because the information entropy is the
+
+487
+00:46:29,000 --> 00:46:36,110
+system's individual entropy minus the conditional
+entropy, just simple addition. This is the
+
+488
+00:46:36,110 --> 00:46:40,730
+important part. If we flip two coins so that
+they're completely independent of each other,
+
+489
+00:46:40,730 --> 00:46:47,850
+this is what the numbers end up looking like.
+The conditional entropy, the coin A has one
+
+490
+00:46:47,850 --> 00:46:51,910
+bit of randomness and coin B has one bit of
+randomness so the total entropy in the system
+
+491
+00:46:51,910 --> 00:46:55,970
+is two bits of randomness. The system as a
+whole of these two coins can be in one of
+
+492
+00:46:55,970 --> 00:47:02,460
+four states, the log of four is two, and there's
+no information that one coin contains about
+
+493
+00:47:02,460 --> 00:47:07,710
+the other. By way of contrast, if we have
+a coin with a sensor, just looking at that
+
+494
+00:47:07,710 --> 00:47:13,760
+coin telling us whether it's landed heads
+or tails then--and the sensor is working properly,
+
+495
+00:47:13,760 --> 00:47:21,550
+then we have one bit of information entropy
+because the sensor gives us perfect information
+
+496
+00:47:21,550 --> 00:47:24,980
+about the coin and vice versa by the way.
+The coin gives us perfect information about
+
+497
+00:47:24,980 --> 00:47:29,920
+the sensor, there's no directionality here,
+and the total entropy in the system is one
+
+498
+00:47:29,920 --> 00:47:33,720
+bit so it's only going to be in one of two
+states, heads and sensor says heads, or tails
+
+499
+00:47:33,720 --> 00:47:41,080
+and sensor says tails. If we extend, do the
+same math again except using complex numbers
+
+500
+00:47:41,080 --> 00:47:47,060
+instead of real numbers then you end up with
+something called the Von Neumann entropy which
+
+501
+00:47:47,060 --> 00:47:54,530
+is called S and this hairy-looking equation
+over here, which I don't have time to go into,
+
+502
+00:47:54,530 --> 00:48:00,170
+but the intuition is kind of the same as it
+was before when we talked about how interference
+
+503
+00:48:00,170 --> 00:48:05,480
+was produced. Because we're now dealing with
+complex numbers rather than real numbers,
+
+504
+00:48:05,480 --> 00:48:09,740
+the information entropy is no longer restricted
+to the range zero and one. And, in fact, entropies
+
+505
+00:48:09,740 --> 00:48:17,470
+are no longer restricted to be positive real
+numbers, they can be negative. And this turns
+
+506
+00:48:17,470 --> 00:48:24,410
+out to be, if you do the math, the entropy
+diagram for a pair of entangled particles.
+
+507
+00:48:24,410 --> 00:48:30,980
+You get a negative bit of entropy over here.
+And the information entropy, the amount of
+
+508
+00:48:30,980 --> 00:48:35,990
+information that one particle quantum information
+now, that one particle contains about the
+
+509
+00:48:35,990 --> 00:48:42,320
+other is two bits. So you can think about
+two entangled particles, the math is telling
+
+510
+00:48:42,320 --> 00:48:46,730
+us that these particles are now, somehow,
+better than perfectly correlated. They have
+
+511
+00:48:46,730 --> 00:48:53,690
+become super correlated and the total entropy
+of this system, the sum of all these numbers,
+
+512
+00:48:53,690 --> 00:49:02,230
+is zero. There's no randomness. That's not
+yet the cool part. What happens when we take
+
+513
+00:49:02,230 --> 00:49:07,690
+a measurement? Well, when we take measurement,
+we have a particle that becomes entangled
+
+514
+00:49:07,690 --> 00:49:12,200
+with a macroscopic system of particles. So
+what happens if we have three mutually entangled
+
+515
+00:49:12,200 --> 00:49:20,490
+particles? You end up with a Venn diagram
+that looks like this and if we assume a two-state
+
+516
+00:49:20,490 --> 00:49:27,230
+system then the actual numbers come out looking
+like this. You've got one bit of information
+
+517
+00:49:27,230 --> 00:49:31,800
+entropy between A and C, one bit between A
+and B, and you've got this negative, this
+
+518
+00:49:31,800 --> 00:49:41,920
+weird negative entropies over here and it's
+all kind of mind-boggling. But let's imagine
+
+519
+00:49:41,920 --> 00:49:46,770
+that this particle down here is the one that
+we're measuring and this is our--these two
+
+520
+00:49:46,770 --> 00:49:50,950
+particles here are our measurement apparatus.
+And let's look just at the measurement apparatus
+
+521
+00:49:50,950 --> 00:49:56,330
+and ignore the fact that we're actually measuring
+a particle here. So we're going to take this
+
+522
+00:49:56,330 --> 00:50:02,990
+particle C, we're just going to throw it out
+for a minute. It turns out that ignoring C
+
+523
+00:50:02,990 --> 00:50:11,210
+is exactly what is represented by this trace
+operator here that ends up showing up in the
+
+524
+00:50:11,210 --> 00:50:22,660
+math. Look what happens. This one bit of information
+entropy--we lose this boundary so this one,
+
+525
+00:50:22,660 --> 00:50:27,670
+the negative one, cancel out and become a
+zero, same thing over here, and what we have
+
+526
+00:50:27,670 --> 00:50:36,350
+is if we ignore this is exactly the same system
+from an information theoretical point of view
+
+527
+00:50:36,350 --> 00:50:42,410
+as a coin with a sensor, we have two classical
+particles that are perfectly correlated with
+
+528
+00:50:42,410 --> 00:50:50,450
+each other in a classical sense. I should
+remind you of the experiment that we did at
+
+529
+00:50:50,450 --> 00:50:58,160
+the beginning of the talk where everybody
+agreed that that's something was green. And
+
+530
+00:50:58,160 --> 00:51:02,230
+we can get that from quantum mechanics, we
+get these two systems that are in classical
+
+531
+00:51:02,230 --> 00:51:06,560
+correlation. But we did that not by actual--not
+by having an objective physical reality that
+
+532
+00:51:06,560 --> 00:51:10,840
+we reflect but actually by ignoring the thing
+that we're measuring, or that we think we're
+
+533
+00:51:10,840 --> 00:51:16,450
+measuring. As it turns out that this extends
+to any macroscopic ecosystem. If you add an
+
+534
+00:51:16,450 --> 00:51:20,750
+arbitrary number of particles the entropy
+diagram ends up looking exactly the same.
+
+535
+00:51:20,750 --> 00:51:25,410
+So, this is now the mathematical description
+of a quantum measurement. You have the system
+
+536
+00:51:25,410 --> 00:51:32,880
+that you're measuring. It's particle Q. It
+interacts and gets entangled with A particle,
+
+537
+00:51:32,880 --> 00:51:39,140
+which is in the parlance of the theory called
+an ancilla which is why they label it A, and
+
+538
+00:51:39,140 --> 00:51:45,070
+that ancilla then gets entangled with a macroscopic
+measurement apparatus in system of 10 to the
+
+539
+00:51:45,070 --> 00:51:50,730
+23 particles, and the entropy diagram ends
+up looking exactly the same where this entire
+
+540
+00:51:50,730 --> 00:51:58,420
+system has the same quantum information, theoretical
+information content, as the third particle
+
+541
+00:51:58,420 --> 00:52:06,070
+in a three-particle entangled system. So,
+that is now a description of what measurement
+
+542
+00:52:06,070 --> 00:52:09,970
+looks like purely in terms of quantum mechanics.
+And the interesting thing about that is it
+
+543
+00:52:09,970 --> 00:52:15,400
+describes all of the microscopic phenomenon
+that we see that we naively observe about
+
+544
+00:52:15,400 --> 00:52:19,550
+classical measurements but it's purely in
+terms of quantum mechanics, which means that
+
+545
+00:52:19,550 --> 00:52:29,270
+it's reversible. So, their--so, somehow, we
+ought to be able to undo an actual physical
+
+546
+00:52:29,270 --> 00:52:35,720
+classical measurement but in practice we can't
+seem to. And the reason for that is because
+
+547
+00:52:35,720 --> 00:52:40,930
+in order to do that--in theory, it's possible,
+but in practice we would have to undo all
+
+548
+00:52:40,930 --> 00:52:46,260
+of the entanglements in this macroscopic system.
+So, for me, to now go back in--back in time,
+
+549
+00:52:46,260 --> 00:52:51,230
+you know, we aren't really going back in time,
+but for me to erase all of your memories of
+
+550
+00:52:51,230 --> 00:52:55,680
+having seen this green thing on the screen
+and agreed that it was green at the beginning
+
+551
+00:52:55,680 --> 00:53:02,450
+of the screen, I would have to undo this enormous
+web of entanglement that has since proliferated
+
+552
+00:53:02,450 --> 00:53:06,410
+at the speed of light. I have to bring all
+those particles back together and recombine
+
+553
+00:53:06,410 --> 00:53:11,970
+them. And in principle, that's possible and
+in practice, obviously, it's not, which is
+
+554
+00:53:11,970 --> 00:53:19,520
+why classical measurement seems to be irreversible
+despite the fact that the physics of the universe
+
+555
+00:53:19,520 --> 00:53:25,980
+say that everything is reversible. So, this
+has some philosophical implications. I call
+
+556
+00:53:25,980 --> 00:53:31,120
+it the zero universe interpretation of quantum
+mechanics. If you really--if you buy this
+
+557
+00:53:31,120 --> 00:53:35,860
+as a description of what the physics of the
+universe is really like, then it tells you
+
+558
+00:53:35,860 --> 00:53:42,010
+unambiguously that it is not the case; that
+the reason that measurements are consistent
+
+559
+00:53:42,010 --> 00:53:49,610
+across space and time is because there's a
+real underlying metaphysical reality out there.
+
+560
+00:53:49,610 --> 00:53:57,960
+It tells you in fact, the exact opposite,
+that what we really are is, as David Mermin
+
+561
+00:53:57,960 --> 00:54:03,220
+puts it, "correlations without correlata."
+We are not made of atoms we are actually made
+
+562
+00:54:03,220 --> 00:54:11,580
+of bits. We are our thoughts and these thoughts
+actually reside, if you will forgive stretching
+
+563
+00:54:11,580 --> 00:54:15,960
+a metaphor to the breaking point, we are a
+simulation running on a quantum computer.
+
+564
+00:54:15,960 --> 00:54:25,720
+I'm going to skip that. So, the take-home
+message is, going back to this Einstein quote
+
+565
+00:54:25,720 --> 00:54:28,690
+that, "The most incomprehensible thing about
+the universe is that it's comprehensible."
+
+566
+00:54:28,690 --> 00:54:33,270
+Here's an explanation in terms of physical
+theory of why the universe is comprehensible.
+
+567
+00:54:33,270 --> 00:54:39,990
+Quantum mechanics actually predicts a comprehensible
+universe but at the cost of forcing you to
+
+568
+00:54:39,990 --> 00:54:44,600
+believe that what you perceive as physical
+reality is not actually real it's actually
+
+569
+00:54:44,600 --> 00:54:54,770
+an illusion. And the motto here is that "spooky
+action at a distance" is no more and no less
+
+570
+00:54:54,770 --> 00:55:01,740
+mysterious than the "spooky action across
+time" that lets us perceive the universe as
+
+571
+00:55:01,740 --> 00:55:05,520
+consistent from one moment to the next. They're
+both produced by the exact, same physical
+
+572
+00:55:05,520 --> 00:55:14,190
+phenomenon, namely entanglement. And I'll
+leave you with this quote from an ancient
+
+573
+00:55:14,190 --> 00:55:27,960
+Japanese Zen master and open the floor for
+questions. Uh-oh, the physicists are walking
+
+574
+00:55:27,960 --> 00:55:37,170
+out. Yeah?
+>> So you have the three particles when you
+
+575
+00:55:37,170 --> 00:55:50,520
+remove from the shell what the main two look
+like and they were building to the point in
+
+576
+00:55:50,520 --> 00:55:50,660
+the sensor. Why not leave the--what happens
+when you leave a third particle away? And
+
+577
+00:55:50,660 --> 00:55:56,160
+if you're taking that as another thought experiments
+and say, "Well, this is equivalent too."
+
+578
+00:55:56,160 --> 00:55:57,359
+>> GARRET: Yeah. Well, this is--so these are
+all just math, right?
+
+579
+00:55:57,359 --> 00:55:59,690
+>> Right.
+>> GARRET: So, these are all mathematical
+
+580
+00:55:59,690 --> 00:56:06,990
+manipulations, the results of which we interpret
+in order to tell stories about what our world
+
+581
+00:56:06,990 --> 00:56:12,920
+is like. And if you leave it in, then what
+you have is a description of the unadulterated
+
+582
+00:56:12,920 --> 00:56:18,310
+underlying physical reality, which is quantum.
+And the reason that's hard to wrap your brain
+
+583
+00:56:18,310 --> 00:56:24,980
+around is because your brain is classical,
+everything that you are is classical. You're
+
+584
+00:56:24,980 --> 00:56:30,320
+made of classical bits that ones--or you're
+a Turing machine, you're not a quantum computer,
+
+585
+00:56:30,320 --> 00:56:35,580
+but you're made out of a quantum computer.
+And that's why there's this fundamental disconnect
+
+586
+00:56:35,580 --> 00:56:39,740
+that will always take a toll in our intuitions
+that will never go away because they're really
+
+587
+00:56:39,740 --> 00:56:44,020
+fundamentally different. The difference between
+real numbers and complex numbers, the underlying
+
+588
+00:56:44,020 --> 00:56:49,330
+reality is complex, but the thing that is
+processing the information that lets you think
+
+589
+00:56:49,330 --> 00:56:55,500
+about these things is real. It's made of real
+numbers. That's really the underlying--the
+
+590
+00:56:55,500 --> 00:56:59,960
+pithiest way I know of summarizing this so
+it just depends on what point of view you
+
+591
+00:56:59,960 --> 00:57:06,790
+want to take.
+>> I'd like to make a short pitch for the
+
+592
+00:57:06,790 --> 00:57:14,800
+multiple universes and hear your response.
+The multiple universes, one way to look at
+
+593
+00:57:14,800 --> 00:57:22,950
+it is the natural equation, it allows for--because
+it's linear, you can have things occurring
+
+594
+00:57:22,950 --> 00:57:31,950
+that live in the same equation and sometimes,
+say, with the dead and a live cat, you can
+
+595
+00:57:31,950 --> 00:57:37,210
+see that you can actually sort of separate
+them, each goes its own way, they don't interact
+
+596
+00:57:37,210 --> 00:57:45,820
+much, so a very good approximation is to consider
+them one at a time. However, when real quantum
+
+597
+00:57:45,820 --> 00:57:51,970
+effects go then you cannot do it this way.
+So, there are--there are some things that
+
+598
+00:57:51,970 --> 00:57:58,420
+you can separate and some not. So, now, you're
+saying that you have an interpretation of
+
+599
+00:57:58,420 --> 00:58:00,880
+a one universe so...
+>> GARRET: No, not one. Zero.
+
+600
+00:58:00,880 --> 00:58:03,360
+>> Zero, all right.
+>> GARRET: Very important distinction. One
+
+601
+00:58:03,360 --> 00:58:05,849
+universe, one classical universe really is
+untenable.
+
+602
+00:58:05,849 --> 00:58:10,020
+>> Well...
+>> GARRET: You can--you can--that's Copenhagen.
+
+603
+00:58:10,020 --> 00:58:13,550
+>> Yeah.
+>> GARRET: You can--you can--yes, the--so
+
+604
+00:58:13,550 --> 00:58:18,410
+the question was, what do I think about multiple
+universes? Multiple universes are just as
+
+605
+00:58:18,410 --> 00:58:25,290
+tenable, according the math, as zero universes.
+The only thing that's not tenable is one classical
+
+606
+00:58:25,290 --> 00:58:28,710
+universe, that's--that's the only thing that
+the math tells you unambiguously does not
+
+607
+00:58:28,710 --> 00:58:36,220
+exist. And it's a matter of taste. You know,
+I personally--one of the things that the--that
+
+608
+00:58:36,220 --> 00:58:42,160
+the math tells you if you think about it in
+terms of multiple universes, is that once
+
+609
+00:58:42,160 --> 00:58:49,440
+you get beyond a certain level of separation
+these universes are forever inaccessible to
+
+610
+00:58:49,440 --> 00:58:56,080
+us, even, you know, to any reasonable degree
+of approximation. And then there's this philosophical
+
+611
+00:58:56,080 --> 00:59:04,560
+question of is the thing actually real and
+the analogy that--the best analogy that I've
+
+612
+00:59:04,560 --> 00:59:10,770
+heard is imagine a photon that leaves the
+back of the sun and goes away from us and
+
+613
+00:59:10,770 --> 00:59:21,430
+so it's forever outside our light cone, is
+that photon real? And my reply to that is
+
+614
+00:59:21,430 --> 00:59:24,340
+there's a difference between the photon that
+leaves the back of the sun and travels away
+
+615
+00:59:24,340 --> 00:59:29,290
+from us because there's always the possibility
+that somewhere out there's a mirror that's
+
+616
+00:59:29,290 --> 00:59:34,650
+going to reflect that photon back to us and
+we won't know that until that mirror actually
+
+617
+00:59:34,650 --> 00:59:41,770
+reflects it and it comes back and we can see.
+But in the case of multiple universes, we
+
+618
+00:59:41,770 --> 00:59:45,900
+know unambiguously the math tells us so that
+once another universe splits off, it's never
+
+619
+00:59:45,900 --> 00:59:51,200
+coming back. There's no way to bring it back.
+>> After a concurrent time, it will.
+
+620
+00:59:51,200 --> 00:59:55,160
+>> GARRET: Excuse me?
+>> After a concurrent time, it will.
+
+621
+00:59:55,160 --> 01:00:02,610
+>> GARRET: Okay, in any amount of time that
+we have any practical reason to care about.
+
+622
+01:00:02,610 --> 01:00:12,910
+So, yes, if you're thinking cosmologically,
+multiple universes is a--is a tenable interpretation.
+
+623
+01:00:12,910 --> 01:00:18,650
+If you're thinking in terms--if--if you want
+a story that you can help you to understand
+
+624
+01:00:18,650 --> 01:00:24,170
+how the universe works in terms of your everyday
+life and what your fundamental nature is,
+
+625
+01:00:24,170 --> 01:00:30,080
+I personally find that I gravitate more towards
+the information theoretic point of view and
+
+626
+01:00:30,080 --> 01:00:36,520
+believing that--that I'm--I--the universe
+that I exist in is a very good high-quality
+
+627
+01:00:36,520 --> 01:00:42,700
+simulation. But that's a matter of taste.
+>> So do multiple universes conserve mass
+
+628
+01:00:42,700 --> 01:00:47,050
+energy?
+>> GARRET: That I don't know. I have to defer
+
+629
+01:00:47,050 --> 01:00:52,960
+that to the physicists. That's a very good
+question. I don't--I actually don't know the
+
+630
+01:00:52,960 --> 01:01:00,280
+answer to that.
+>> Could you amplify a bit more for what does
+
+631
+01:01:00,280 --> 01:01:01,130
+a zero universe mean?
+>> GARRET: This--oh, by the way, the question
+
+632
+01:01:01,130 --> 01:01:05,830
+back here was do multiple universes conserve
+mass energy. It's a very--a very good question
+
+633
+01:01:05,830 --> 01:01:09,420
+because--and I don't know the answer. I should--I
+should ask--I need to ask a physicist who...
+
+634
+01:01:09,420 --> 01:01:17,790
+>> I've asked this question of "many worlds"
+proponent and the answer I got is, yes, that
+
+635
+01:01:17,790 --> 01:01:25,090
+you're not actually doubling the amount of
+mass, you're dividing the amount of mass into
+
+636
+01:01:25,090 --> 01:01:26,500
+two effectively but...
+>> GARRET: Oh, okay. So somebody in the audience
+
+637
+01:01:26,500 --> 01:01:31,950
+is saying that when universes split, the total
+amount of mass in the universe gets evenly
+
+638
+01:01:31,950 --> 01:01:36,220
+divided between the two universes and I'm
+guessing that math works out in such a way
+
+639
+01:01:36,220 --> 01:01:41,180
+that if you reduce the amount of mass in a
+classical universe uniformly by one half,
+
+640
+01:01:41,180 --> 01:01:45,780
+that everything ends up working out the same
+as it did before. But I'm going to have to
+
+641
+01:01:45,780 --> 01:01:46,730
+think about that.
+>> So this is just even one universe does
+
+642
+01:01:46,730 --> 01:01:47,150
+not conserve mass energy with anything. Universes
+as whole...
+
+643
+01:01:47,150 --> 01:01:49,869
+>> GARRET: Okay.
+>> And yet, in one--in the universe we're
+
+644
+01:01:49,869 --> 01:01:56,680
+in, we don't seem to see this mass dwindling
+away.
+
+645
+01:01:56,680 --> 01:01:59,230
+>> But it's, you know, because we're doing
+the same...
+
+646
+01:01:59,230 --> 01:02:04,400
+>> GARRET: Yeah. So in that, we are now beyond
+the limits of my knowledge of this stuff.
+
+647
+01:02:04,400 --> 01:02:07,150
+Yeah?
+>> For those of us who are intrigued and teased,
+
+648
+01:02:07,150 --> 01:02:10,340
+where can we learn more?
+>> GARRET: So, I have paper about this. It's
+
+649
+01:02:10,340 --> 01:02:20,280
+on the web. I highly recommend David Mermin's
+book, Boojums: All the Way Through, where
+
+650
+01:02:20,280 --> 01:02:24,040
+he doesn't actually talk about this but he
+talks about the Bell inequality in a very
+
+651
+01:02:24,040 --> 01:02:30,280
+accessible way, which is also--I didn't have
+time to talk about that but it's very worthwhile
+
+652
+01:02:30,280 --> 01:02:36,050
+knowing about. Or send--send me an email.
+I can actually put you in touch with the guys
+
+653
+01:02:36,050 --> 01:02:38,690
+whose research this talk is based on. They're
+down at Caltech, I think. Yeah?
+
+654
+01:02:38,690 --> 01:02:41,970
+>> So is this an entirely local theory that
+all interactions are interacting locally propagating
+
+655
+01:02:41,970 --> 01:02:54,970
+at the speed of light, or is it?
+>> GARRET: Well, so this get--so, the question
+
+656
+01:02:54,970 --> 01:03:02,619
+was is this a local, purely local theory.
+It's quantum mechanics. And whether quantum
+
+657
+01:03:02,619 --> 01:03:10,310
+mechanics is purely local is the subject of
+debate. And it depends--it depends on what
+
+658
+01:03:10,310 --> 01:03:18,160
+you mean by purely local. Classically, it's
+not, and quantum mechanically, it is. You
+
+659
+01:03:18,160 --> 01:03:29,510
+know, I--this sheds no extra light on that
+question. Okay, I guess, that's it.
+
