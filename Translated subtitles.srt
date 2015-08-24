@@ -4,281 +4,340 @@
 
 2
 00:00:22,082 --> 00:00:27,064
+ГЛЕКЛЕР: Всем привет. Я Артур Глеклер и я рад представить вам д-ра Рона Гаррета,
 GLECKLER: Hi everyone. I'm Arthur Gleckler
 and I'm happy to introduce Dr. Ron Garret
 
 3
 00:00:27,046 --> 00:00:32,088
+который будет сегодня говорить о квантовой механике. Он бывший сотрудник Google,
 here, who's going to be speaking about quantum
 mechanics today. He's a former Googler from
 
 4
 00:00:32,034 --> 00:00:37,064
+работавший на заре появления этой компании, где-то в 2000-ых. Он был ведущим инженером первой
 the very early days of the company, around
 2000. He was the lead engineer on the first
 
 5
 00:00:37,098 --> 00:00:43,037
+версии AdWords и первоначальным автором консоли переводчика Google. Он также
 release of AdWords and the original author
 of the Google translation console. He also
 
 6
 00:00:43,098 --> 00:00:48,041
+написал первую версию биллинговой системы, используемой Google. Также в течение многих лет он работал
 wrote the first billing system that Google
 used. Also, for many years, he worked at the
 
 7
 00:00:48,039 --> 00:00:53,037
+в отделе исследования реактивного движения NASA в Пасадене, специализируясь на ИИ и робототехнике. Я надеюсь убедить его
 NASA Jet Propulsion Lab in Pasadena, specializing
 in AI and robotics. I'm hoping to convince
 
 8
 00:00:53,076 --> 00:00:59,079
+вернуться обратно и поговорить с ним о его опыте отладки космического корабля на расстоянии 250 млн. миль от
 him to come back and talk about his experiences,
 debugging spacecraft 250 million miles from
 
 9
 00:00:59,055 --> 00:01:06,059
+земли. Это Рон.
+>> ГАРРЕТ: Спасибо. Итак, мне сказали, что моя аннотация к выступлению
 the earth. Here's Ron.
 >> GARRET: Thanks. So I'm told that my abstract
 
 10
 00:01:09,088 --> 00:01:14,056
+вызвала неразбериху, так что давайте я начну с разъяснений,
 caused a little bit of a kerfuffle so let
 me start out with a couple of disclaimers
 
 11
 00:01:14,044 --> 00:01:20,025
+чтобы, так сказать, исправить ожидания. Название лекции содержит в себе толику лукавства.
 upfront to kind of manage expectations. The
 title of the talk was intended to be tongue-in-cheek.
 
 12
 00:01:20,069 --> 00:01:25,016
+На самом деле нет никакого заговора — по крайней мере, насколько я знаю — но есть большая разница
 There is no actual conspiracy, at least, as
 far as I know but there is a fairly big disconnect
 
 13
 00:01:25,085 --> 00:01:30,019
+между тем, что вы читаете о квантовой механике в массовой прессе и тем, что есть на самом деле,
 between what you read about quantum mechanics
 in the popular press and what the actual underlying
 
 14
 00:01:30,004 --> 00:01:35,027
+и именно об этом и пойдет речь. Я не физик. Тут есть
 truth is, and that's what this talk is about.
 I am not a physicist. Do we have any actual
 
 15
 00:01:35,031 --> 00:01:42,095
+физики? Ой, ничего себе, ну хорошо. Вы будете следить за мной, чтобы я не соврал. Я инженер-.
 physicists in the crowd? Oh, boy, okay. You
 can make sure you keep me honest. I'm a software
 
 16
 00:01:44,259 --> 00:01:50,451
+программист. Я пришел к этому около 20 лет назад, когда я прочитал статью в «Scientific
 engineer. I came upon this about actually
 20 years ago when I read an article in Scientific
 
 17
 00:01:50,071 --> 00:01:55,003
+American». Тогда я подумал: «Это не может быть правдой». Только через 10 лет я, наконец,
 American and I thought, "This can't possibly
 be right." And it took me 10 years to finally
 
 18
 00:01:55,074 --> 00:02:01,419
+встретился с одним физиком в Caltech, и он смог мне объяснить, почему это действительно неправда, и в этот
 find a physicist at Caltech who could explain
 to me why in fact it wasn't right and at that
 
 19
 00:02:01,159 --> 00:02:04,971
+момент в моей голове будто щелкнуло, и квантовая механика стала для меня куда более осмысленной,
 point, everything just kind of clicked and
 quantum mechanics made a lot more sense to
 
 20
 00:02:04,013 --> 00:02:08,239
+чем была ранее. И вот об этом и пойдет речь. Я расскажу о… Я расскажу о другом
 me than it did before. And that's what this
 talk is about. It's about--it's about a different
 
 21
 00:02:08,369 --> 00:02:15,128
+понимании КМ, которое не получило распространения и которое развенчивает миф о том, что
 way to think about QM that hasn't gotten very
 much attention and dispels this idea that
 
 22
 00:02:17,034 --> 00:02:23,079
+квантовая механика — это нечто непостижимо странное. Однажды мне кто-то сказал, что квантовая
 quantum mechanics is sort of intractably weird.
 Somebody has said to me once that quantum
 
 23
 00:02:23,013 --> 00:02:28,169
+механика подчиняется закону сохранения странности. И в определенной степени, да,
 mechanics obeys the law of conservation of
 weirdness. And to a certain extent, that is
 
 24
 00:02:28,299 --> 00:02:33,521
+это правда. Есть определенная доля… Квантовая механика бросает вызов вашей интуиции,
 true. There is a certain amount of--quantum
 mechanics extracts a toll on your intuition
 
 25
 00:02:33,082 --> 00:02:38,629
+и от этого никуда не уйти. Но я не думаю, что квантовая механика
 and some of that will never go away. But I
 don't think that quantum mechanics needs to
 
 26
 00:02:38,449 --> 00:02:44,001
+фундаментально менее постижима, чем, скажем, относительность, в понимании которой у большинства «технарей»,
 be fundamentally any more incomprehensible
 than, say, relativity which most technical
 
 27
 00:02:44,459 --> 00:02:50,099
+в общем-то, не возникает сегодня особых проблем. Итак, теперь, когда я
 people seem to have no trouble wrapping their
 brains around nowadays. So with that sort
 
 28
 00:02:50,449 --> 00:02:54,097
+закончил с разъяснениями, я хочу попросить вас подумать
 of expectation management out of the way,
 I want to start out by inviting you to think
 
 29
 00:02:54,419 --> 00:03:00,001
+над вопросом: «Что значит "измерить" что-то?» То есть, представьте, что вы
 about the question, "What does it mean to
 'measure' something?" So, imagine that we're
 
 30
 00:03:00,519 --> 00:03:07,180
+сидите здесь и проводите какой-то эксперимент. У нас есть некая система — дайте-ка я возьму указку — у которой мы
 sitting here doing some experiment. We have
 some system--let me grab a pointer--that we
 
 31
 00:03:08,007 --> 00:03:12,047
+хотим измерить какое-то свойство, поэтому мы ставим, там, датчик, например, камеру,
 want to measure some property of it so we
 have some, you know, sensor here like a camera,
 
 32
 00:03:12,054 --> 00:03:16,979
+и она собирает какие-то данные и передает их в компьютер, и эти данные потом появляются на
 and it gathers some data and we feed it to
 a computer, and that data shall pop up from
 
 33
 00:03:16,519 --> 00:03:21,671
+экране, мы смотрим на них своими глазами, и формируем некий мысленный образ в нашей голове.
 the screen, and we look at that with our eyes,
 and we form some mental image in our head,
 
 34
 00:03:21,019 --> 00:03:25,669
+Но откуда мы знаем, что этот мысленный образ, который мы сформировали в голове, действительно соответствует
 and how do we know that this mental image
 that we form in our head actually corresponds
 
 35
 00:03:25,859 --> 00:03:32,491
+лежащей в основе физической реальности? Ну, один показатель — это то, что мы
 to underlying physical reality? Well, one
 indication that we have of this is that we
 
 36
 00:03:32,035 --> 00:03:37,003
+можем проделать эксперимент несколько раз и получить согласованные результаты. То есть, например,
 can do experiments more than once and observe
 that we get consistent results. So, for example,
 
 37
 00:03:37,038 --> 00:03:39,009
+какой это цвет?
+>> Зеленый.
 what color is this?
 >> Green.
 
 38
 00:03:39,047 --> 00:03:46,219
+>> ГАРРЕТ: Зеленый, да. То есть, наш каждодневный опыт говорит нам, что результаты
 >> GARRET: Green, yes. So we can observe through
 our common everyday experience that the results
 
 39
 00:03:48,669 --> 00:03:54,241
+измерений согласованы в пространстве и времени. Но — что я хочу сказать — это и правда очень
 of measurements are consistent across space
 and time. And, I mean, this is really a very
 
 40
 00:03:54,091 --> 00:04:01,035
+надежный аспект нашей вселенной, но почему это так, остается загадкой.
 reliable aspect of our universe, but it's
 actually a very deep mystery why this is so.
 
 41
 00:04:01,026 --> 00:04:05,039
+И Эйнштейн как-то сказал свою знаменитую фразу: «Самое непостижимое в этом мире то,
 And Einstein famously said that, "The most
 incomprehensible thing about the universe
 
 42
 00:04:05,065 --> 00:04:10,088
+что он постижим». Мы в самом деле можем ставить эксперименты и получать результаты, которые согласованы
 is that it is comprehensible." We can actually
 do experiments and get results that are consistent
 
 43
 00:04:10,053 --> 00:04:16,081
+в пространстве и времени, но мы не знаем, почему это так, никаких существенных причин, почему это
 across space and time and we don't really
 know why that, any inherent reason, why that
 
 44
 00:04:16,034 --> 00:04:22,059
+должно быть так. Правда, есть одно правдоподобно звучащее объяснение, почему это всё
 should be the case. Now, there is one very
 plausible sounding explanation of why this
 
 45
 00:04:22,093 --> 00:04:26,098
+так, и состоит оно в том, что результаты измерений на самом деле являются точным
 is the case, and that is that the results
 of these measurements are actually an accurate
 
 46
 00:04:26,091 --> 00:04:31,009
+отражением некоторой метафизической реальности, лежащей в основе нашего мира.
+Что есть реальность, есть некая реальная
 reflection of some underlying metaphysical
 reality. That reality, that there really is
 
 47
 00:04:31,081 --> 00:04:37,041
+вселенная, и когда мы измеряем ее, мы получаем информацию об
 a universe out there and when we measure it,
 we're getting back actual information about
 
 48
 00:04:37,022 --> 00:04:41,068
+этой лежащей в основе физической реальности. И что в этом и есть причина, по которой измерения согласованы —
 that underlying physical reality. And that
 is the reason why these measurements are consistent
 
 49
 00:04:41,009 --> 00:04:48,068
+потому что реальность следит за тем, чтобы так оно и было. Впрочем, мы сможем показать,
 because reality sees to it that that's the
 case. Well, it turns out that we can demonstrate
 
 50
 00:04:48,058 --> 00:04:55,288
+что это не так. Я собираюсь провести вас в кроличью нору, но моя цель —
 that that's not true. I'm about to lead you
 down a rabbit hole but my purpose in leading
 
 51
 00:04:55,073 --> 00:04:59,004
+провести вас в кроличью нору таким образом, чтобы вы смогли найти дорогу обратно.
 you down this rabbit hole is to do it in such
 a way that you can find your way back out
 
 52
 00:04:59,013 --> 00:05:03,009
+Так что я буду делать это очень осторожно, шаг за шагом, и говорить заранее, куда
 again. So I'm going to do it very carefully,
 step by step, and tell you in advance where
 
 53
 00:05:03,022 --> 00:05:08,094
+мы движемся. Я начну с обзора обычного описания КМ. Того, что вы прочитаете, если
 we're going. I'm going to start out by reviewing
 the usual QM story. What you will read if
 
 54
 00:05:08,016 --> 00:05:14,016
+зайдете в популярный раздел по квантовой механике, там, на Amazon
 you go to a popular account of quantum mechanics
 that you read, you know, pick up at Amazon
 
 55
 00:05:14,032 --> 00:05:21,314
+или другом книжном магазине или прочитаете о ней в Wired или еще где. Затем я покажу вам, почему это описание
 or a bookstore or read about it in Wired or
 whatever. I'll then show you how that story
 
 56
 00:05:23,018 --> 00:05:27,016
+не может быть правдой, потому что если бы оно было правдой, то это привело бы к нарушению
 can't possibly be true, because if that story
 were true, it would lead to a violation of
 
 57
 00:05:27,034 --> 00:05:31,019
+принципа относительности, в частности, к передаче информации быстрее света. 
 relativity, in particular, it would lead to
 faster-than-light communication. And it doesn't
 
